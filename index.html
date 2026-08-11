@@ -16,7 +16,8 @@
         @media (hover: hover) and (pointer: fine) { body { cursor: none; } }
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
-        #inventory { position: fixed; top: 50px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 25; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 10px; min-height: 50px; align-items: center; }
+        /* ИНВЕНТАРЬ — только слоты, без фона */
+        #inventory { position: fixed; top: 50px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 25; }
         .inv-slot { width: 44px; height: 44px; background: rgba(20,20,20,0.8); border: 2px solid #444; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
         .inv-slot:active { border-color: #aaa; background: rgba(40,40,40,0.9); }
         .inv-slot img { width: 36px; height: 36px; object-fit: contain; pointer-events: none; }
@@ -168,7 +169,9 @@
 
         (function loop(){requestAnimationFrame(loop);Engine.update(engine,1000/60);var sx=0,sy=0;if(screenShake>0){sx=(Math.random()-0.5)*screenShake;sy=(Math.random()-0.5)*screenShake;screenShake--}ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);ctx.save();ctx.translate(sx,sy);if(bgImg.complete&&bgImg.naturalWidth>0)ctx.drawImage(bgImg,0,0,W,H);if(acidCloud){ctx.fillStyle='rgba(100,255,100,'+acidCloud.alpha+')';ctx.fillRect(0,0,W,H)}drawEffects();var pos=head.position,angle=head.angle;ctx.save();ctx.translate(pos.x,pos.y);ctx.rotate(angle);var face=(isHurt&&faceHurt.complete&&faceHurt.naturalWidth>0)?faceHurt:faceNormal;if(face.complete&&face.naturalWidth>0)ctx.drawImage(face,-RADIUS,-RADIUS,RADIUS*2,RADIUS*2);ctx.restore();Composite.allBodies(world).forEach(b=>{if(b.label==='weapon'&&b.weaponKey&&wImg[b.weaponKey]){var img=wImg[b.weaponKey];if(img.complete&&img.naturalWidth>0){ctx.save();ctx.translate(b.position.x,b.position.y);ctx.rotate(b.angle);ctx.drawImage(img,-30,-30,60,60);ctx.restore()}}});ctx.restore();if(equippedWeapon&&ultReady)$('ult-info').textContent=wData[equippedWeapon].ult+' готов';else if(!ultReady)$('ult-info').textContent='Перезарядка...';else $('ult-info').textContent=''})();
 
-        $('coins-display').querySelector('span').textContent=formatCoins(coins);renderInventory();updateUltButton();
+        $('coins-display').querySelector('span').textContent=formatCoins(coins);
+        renderInventory();
+        updateUltButton();
     </script>
 </body>
 </html>
