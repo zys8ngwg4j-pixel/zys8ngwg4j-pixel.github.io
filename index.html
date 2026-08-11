@@ -3,51 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Buddy Head</title>
-
-    <!-- PWA -->
+    <title>Hit The Roman</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="Buddy Head">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-title" content="Hit The Roman">
+    <link rel="apple-touch-icon" href="buddy_head.png">
     <meta name="theme-color" content="#000000">
-
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body {
             width: 100%; height: 100%; overflow: hidden;
             background: #000; font-family: 'Courier New', monospace;
             touch-action: manipulation; user-select: none;
-            -webkit-user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
         }
-        /* На ПК скрываем курсор, на мобильных — обычный */
-        @media (hover: hover) and (pointer: fine) {
-            body { cursor: none; }
-        }
+        @media (hover: hover) and (pointer: fine) { body { cursor: none; } }
 
-        canvas {
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%; z-index: 1;
-        }
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
         #hud {
-            position: fixed; top: 15px; left: 15px;
-            display: flex; align-items: center; gap: 8px;
+            position: fixed; top: 15px; left: 15px; right: 15px;
+            display: flex; justify-content: space-between; align-items: flex-start;
             z-index: 10; pointer-events: none;
         }
-        #hud img { width: 28px; height: 28px; }
-        #coins-display { color: #fff; font-size: 18px; letter-spacing: 2px; }
+        #coins-display { color: #fff; font-size: 16px; letter-spacing: 2px; }
+        #ult-info { color: #aaa; font-size: 10px; text-align: right; }
 
         #btn-shop {
-            position: fixed; bottom: 80px; right: 15px;
-            padding: 14px 20px; background: rgba(30,30,30,0.9);
+            position: fixed; bottom: 90px; right: 15px;
+            padding: 12px 18px; background: rgba(30,30,30,0.9);
             border: 2px solid #666; color: #fff;
-            font-family: 'Courier New', monospace; font-size: 14px;
+            font-family: 'Courier New', monospace; font-size: 13px;
             text-transform: uppercase; letter-spacing: 2px;
             z-index: 10; cursor: pointer;
-            min-width: 44px; min-height: 44px;
+        }
+        #btn-ult {
+            position: fixed; bottom: 90px; left: 15px;
+            padding: 12px 18px; background: rgba(30,30,30,0.9);
+            border: 2px solid #a55; color: #f88;
+            font-family: 'Courier New', monospace; font-size: 13px;
+            text-transform: uppercase; letter-spacing: 2px;
+            z-index: 10; cursor: pointer; display: none;
         }
 
         #inventory {
@@ -56,16 +53,15 @@
         }
         .inv-slot {
             width: 50px; height: 50px;
-            background: rgba(20,20,20,0.8);
-            border: 2px solid #444; border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: 0.2s;
-            min-width: 44px; min-height: 44px;
+            background: rgba(20,20,20,0.8); border: 2px solid #444;
+            border-radius: 8px; display: flex; align-items: center;
+            justify-content: center; cursor: pointer; transition: 0.2s;
         }
         .inv-slot:active { border-color: #aaa; background: rgba(40,40,40,0.9); }
         .inv-slot img { width: 40px; height: 40px; object-fit: contain; pointer-events: none; }
         .inv-slot.empty { opacity: 0.4; cursor: default; }
-        .inv-slot.used { opacity: 0.5; border-color: #555; cursor: default; }
+        .inv-slot.used { opacity: 0.5; border-color: #555; }
+        .inv-slot.equipped { border-color: #ff0; box-shadow: 0 0 8px rgba(255,255,0,0.4); }
 
         #shop-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -78,8 +74,7 @@
         .shop-title { color: #fff; font-size: 20px; letter-spacing: 3px; margin-bottom: 20px; }
         .shop-close {
             position: fixed; top: 15px; right: 20px;
-            color: #fff; font-size: 28px; cursor: pointer;
-            z-index: 101; min-width: 44px; min-height: 44px;
+            color: #fff; font-size: 28px; cursor: pointer; z-index: 101;
         }
         .shop-close:active { color: #ccc; }
 
@@ -99,8 +94,6 @@
             font-family: 'Courier New', monospace; font-size: 12px;
             text-transform: uppercase; letter-spacing: 1px;
             cursor: pointer; white-space: nowrap;
-            min-width: 44px; min-height: 44px;
-            display: flex; align-items: center; justify-content: center;
         }
         .shop-item .btn:active { background: rgba(255,255,255,0.15); }
         .shop-item .btn.disabled { opacity: 0.3; pointer-events: none; }
@@ -111,10 +104,11 @@
     <canvas id="game-canvas"></canvas>
 
     <div id="hud">
-        <img src="coin_icon.png" alt="💰">
-        <span id="coins-display">0</span>
+        <div id="coins-display">💰 0</div>
+        <div id="ult-info"></div>
     </div>
 
+    <div id="btn-ult">УЛЬТ</div>
     <div id="btn-shop">Магазин</div>
     <div id="inventory"></div>
 
@@ -126,14 +120,10 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <script>
-        // ===== PWA SERVICE WORKER =====
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 
         const $ = id => document.getElementById(id);
-        const canvas = $('game-canvas');
-        const ctx = canvas.getContext('2d');
+        const canvas = $('game-canvas'), ctx = canvas.getContext('2d');
 
         const { Engine, World, Bodies, Body, Events, Mouse, MouseConstraint, Composite } = Matter;
         const engine = Engine.create({ gravity: { x: 0, y: 0.8 } });
@@ -143,44 +133,24 @@
         let W, H, floor, leftWall, rightWall, ceiling;
 
         function createWalls() {
-            if (floor) World.remove(world, floor);
-            if (leftWall) World.remove(world, leftWall);
-            if (rightWall) World.remove(world, rightWall);
-            if (ceiling) World.remove(world, ceiling);
-
-            floor = Bodies.rectangle(W/2, H + WALL_SIZE/2, W + WALL_SIZE*2, WALL_SIZE, {
-                isStatic: true, friction: 1, restitution: 0.1, label: 'floor'
-            });
-            leftWall = Bodies.rectangle(-WALL_SIZE/2, H/2, WALL_SIZE, H + WALL_SIZE*2, {
-                isStatic: true, friction: 1, restitution: 0.1, label: 'wall'
-            });
-            rightWall = Bodies.rectangle(W + WALL_SIZE/2, H/2, WALL_SIZE, H + WALL_SIZE*2, {
-                isStatic: true, friction: 1, restitution: 0.1, label: 'wall'
-            });
-            ceiling = Bodies.rectangle(W/2, -WALL_SIZE/2, W + WALL_SIZE*2, WALL_SIZE, {
-                isStatic: true, friction: 1, restitution: 0.1, label: 'ceiling'
-            });
+            [floor, leftWall, rightWall, ceiling].forEach(w => { if (w) World.remove(world, w); });
+            floor = Bodies.rectangle(W/2, H+WALL_SIZE/2, W+WALL_SIZE*2, WALL_SIZE, { isStatic:true, friction:1, restitution:0.1, label:'floor' });
+            leftWall = Bodies.rectangle(-WALL_SIZE/2, H/2, WALL_SIZE, H+WALL_SIZE*2, { isStatic:true, friction:1, restitution:0.1, label:'wall' });
+            rightWall = Bodies.rectangle(W+WALL_SIZE/2, H/2, WALL_SIZE, H+WALL_SIZE*2, { isStatic:true, friction:1, restitution:0.1, label:'wall' });
+            ceiling = Bodies.rectangle(W/2, -WALL_SIZE/2, W+WALL_SIZE*2, WALL_SIZE, { isStatic:true, friction:1, restitution:0.1, label:'ceiling' });
             World.add(world, [floor, leftWall, rightWall, ceiling]);
         }
 
-        const head = Bodies.circle(0, 0, RADIUS, {
-            restitution: 0.2, friction: 0.6, density: 0.004, label: 'head'
-        });
+        const head = Bodies.circle(0, 0, RADIUS, { restitution:0.2, friction:0.6, density:0.004, label:'head' });
         World.add(world, [head]);
 
         const mouse = Mouse.create(canvas);
-        if (mouse.element) {
-            mouse.element.removeEventListener('mousewheel', mouse.mousewheel);
-            mouse.element.removeEventListener('DOMMouseScroll', mouse.mousewheel);
-        }
-        const mouseConstraint = MouseConstraint.create(engine, {
-            mouse: mouse, constraint: { stiffness: 0.05, damping: 0.03, render: { visible: false } }
-        });
+        if (mouse.element) { mouse.element.removeEventListener('mousewheel', mouse.mousewheel); mouse.element.removeEventListener('DOMMouseScroll', mouse.mousewheel); }
+        const mouseConstraint = MouseConstraint.create(engine, { mouse, constraint:{ stiffness:0.05, damping:0.03, render:{ visible:false } } });
         World.add(world, mouseConstraint);
-
-        document.addEventListener('mousemove', function(e) {
-            mouse.position.x = Math.max(RADIUS, Math.min(W - RADIUS, e.clientX));
-            mouse.position.y = Math.max(RADIUS, Math.min(H - RADIUS - 10, e.clientY));
+        document.addEventListener('mousemove', e => {
+            mouse.position.x = Math.max(RADIUS, Math.min(W-RADIUS, e.clientX));
+            mouse.position.y = Math.max(RADIUS, Math.min(H-RADIUS-10, e.clientY));
         });
 
         function loadImg(src) { var img = new Image(); img.src = src; return img; }
@@ -195,50 +165,138 @@
         };
 
         const weaponData = {
-            bat: { name:'Булава', cost:50, reward:20, img:'bat', requires:null, branch:null },
-            sword: { name:'Меч', cost:670, reward:67, img:'sword', requires:'bat', branch:'right' },
-            bita: { name:'Бита', cost:670, reward:67, img:'bita', requires:'bat', branch:'left' },
-            shocker: { name:'Электрошокер', cost:1600, reward:260, img:'shocker', requires:'sword', branch:'right' },
-            acid: { name:'Кислота', cost:1600, reward:260, img:'acid', requires:'sword', branch:'left' },
-            shuriken: { name:'Сюрикены', cost:1600, reward:260, img:'shuriken', requires:'bita', branch:'right' },
-            laser_sword: { name:'Лазерный меч', cost:1600, reward:260, img:'laser_sword', requires:'bita', branch:'left' },
-            unlock: { name:'Разблокировка утерянного', cost:15000, reward:0, img:null, requires:null, branch:null, isUnlock:true }
+            bat: { name:'Булава', cost:50, reward:20, requires:null, branch:null, ultName:'Землетрясение', ultDesc:'5 подскоков' },
+            sword: { name:'Меч', cost:670, reward:67, requires:'bat', branch:'right', ultName:'Удар', ultDesc:'+500 сразу' },
+            bita: { name:'Бита', cost:670, reward:67, requires:'bat', branch:'left', ultName:'Хоум-ран', ultDesc:'+300 в стену' },
+            shocker: { name:'Электрошокер', cost:1600, reward:260, requires:'sword', branch:'right', ultName:'Разряд', ultDesc:'+50/сек 10с' },
+            acid: { name:'Кислота', cost:1600, reward:260, requires:'sword', branch:'left', ultName:'Облако', ultDesc:'+500/5сек 15с' },
+            shuriken: { name:'Сюрикены', cost:1600, reward:260, requires:'bita', branch:'right', ultName:'Шквал', ultDesc:'Тап 15с +260' },
+            laser_sword: { name:'Лазерный меч', cost:1600, reward:260, requires:'bita', branch:'left', ultName:'Луч', ultDesc:'+200/сек 5с' },
+            unlock: { name:'Разблокировка утерянного', cost:67767, reward:0, requires:null, branch:null, isUnlock:true }
         };
 
-        let coins = 0, purchases = {}, usedWeapons = {}, unlockedLost = false, blockedBranch = null;
+        // Состояние
+        let coins = 0, purchases = {}, unlockedLost = false, blockedBranch = null;
         let isHurt = false, hurtTimerId = null;
+        let equippedWeapon = null;
+        let ultReady = true, ultCooldown = 60000, ultActive = false, ultTimer = null, ultTicks = [];
+        let acidCloud = null, acidCloudTimer = null;
 
-        function showHurt() {
-            isHurt = true;
-            if (hurtTimerId) clearTimeout(hurtTimerId);
-            hurtTimerId = setTimeout(function() { isHurt = false; }, 1500);
+        // Сохранение
+        function saveGame() {
+            localStorage.setItem('hitroman_coins', coins);
+            localStorage.setItem('hitroman_purchases', JSON.stringify(purchases));
+            localStorage.setItem('hitroman_unlockedLost', unlockedLost);
+            localStorage.setItem('hitroman_blockedBranch', blockedBranch);
         }
-        function addCoins(amount) { coins += amount; $('coins-display').textContent = coins; }
+        function loadGame() {
+            coins = parseInt(localStorage.getItem('hitroman_coins')) || 0;
+            purchases = JSON.parse(localStorage.getItem('hitroman_purchases')) || {};
+            unlockedLost = localStorage.getItem('hitroman_unlockedLost') === 'true';
+            blockedBranch = localStorage.getItem('hitroman_blockedBranch') || null;
+            if (blockedBranch === 'null') blockedBranch = null;
+        }
+        loadGame();
+        window.addEventListener('beforeunload', saveGame);
+        setInterval(saveGame, 3000);
 
+        function showHurt() { isHurt = true; if (hurtTimerId) clearTimeout(hurtTimerId); hurtTimerId = setTimeout(() => { isHurt = false; }, 1500); }
+        function addCoins(amount) { coins += amount; $('coins-display').textContent = '💰 ' + coins; saveGame(); }
+
+        let weaponSpawned = {};
         function renderInventory() {
             var inv = $('inventory'); inv.innerHTML = '';
-            var owned = Object.keys(purchases).filter(function(k) { return purchases[k] && weaponData[k] && !weaponData[k].isUnlock; });
+            var owned = Object.keys(purchases).filter(k => purchases[k] && weaponData[k] && !weaponData[k].isUnlock);
             for (var i = 0; i < 7; i++) {
                 var slot = document.createElement('div'); slot.className = 'inv-slot';
                 if (i < owned.length) {
                     var wKey = owned[i], w = weaponData[wKey];
-                    var img = document.createElement('img'); img.src = weaponImgs[w.img].src; img.draggable = false;
+                    var img = document.createElement('img'); img.src = weaponImgs[wKey].src; img.draggable = false;
                     slot.appendChild(img);
-                    if (usedWeapons[wKey]) slot.classList.add('used');
-                    else slot.addEventListener('click', (function(key) { return function(e) { e.stopPropagation(); spawnWeapon(key); }; })(wKey));
+                    if (equippedWeapon === wKey) slot.classList.add('equipped');
+                    slot.addEventListener('click', (function(key) { return function(e) { e.stopPropagation(); equipWeapon(key); }; })(wKey));
                 } else slot.classList.add('empty');
                 inv.appendChild(slot);
             }
         }
 
-        function spawnWeapon(wKey) {
-            if (usedWeapons[wKey]) return;
-            usedWeapons[wKey] = true; renderInventory();
+        function equipWeapon(wKey) {
+            if (equippedWeapon === wKey) { equippedWeapon = null; $('btn-ult').style.display = 'none'; }
+            else {
+                equippedWeapon = wKey;
+                if (['bat','sword','bita','shocker','acid','laser_sword'].includes(wKey)) {
+                    weaponSpawned[wKey] = false;
+                }
+                $('btn-ult').style.display = 'block';
+                updateUltButton();
+            }
+            renderInventory();
+        }
+
+        function updateUltButton() {
+            if (!ultReady) { $('btn-ult').textContent = 'Перезарядка...'; $('btn-ult').style.opacity = '0.5'; }
+            else { $('btn-ult').textContent = equippedWeapon ? 'УЛЬТ: '+weaponData[equippedWeapon].ultName : 'УЛЬТ'; $('btn-ult').style.opacity = '1'; }
+        }
+
+        function spawnWeaponBody(wKey) {
+            if (weaponSpawned[wKey]) return;
+            weaponSpawned[wKey] = true;
             World.add(world, [Bodies.rectangle(W/2+(Math.random()-0.5)*100, 60, 60, 60, {
                 restitution:0.3, friction:0.4, density:0.003, label:'weapon', weaponKey:wKey, reward:weaponData[wKey].reward
             })]);
         }
 
+        // Ульта
+        function activateUlt() {
+            if (!ultReady || !equippedWeapon || ultActive) return;
+            ultReady = false; ultActive = true;
+            $('btn-ult').textContent = 'Активна...'; $('btn-ult').style.opacity = '0.7';
+
+            switch(equippedWeapon) {
+                case 'bat':
+                    for (let i = 0; i < 5; i++) setTimeout(() => { Body.setVelocity(head, { x:(Math.random()-0.5)*5, y:-10 }); addCoins(100); showHurt(); }, i*600);
+                    setTimeout(endUlt, 3500);
+                    break;
+                case 'sword':
+                    addCoins(500); showHurt();
+                    Body.setVelocity(head, { x:0, y:-15 });
+                    setTimeout(endUlt, 1000);
+                    break;
+                case 'bita':
+                    addCoins(300); showHurt();
+                    Body.setVelocity(head, { x:(Math.random()>0.5?15:-15), y:-12 });
+                    setTimeout(endUlt, 1000);
+                    break;
+                case 'shocker':
+                    for (let i = 0; i < 10; i++) setTimeout(() => { addCoins(50); showHurt(); Body.setVelocity(head, { x:(Math.random()-0.5)*6, y:(Math.random()-0.5)*4 }); }, i*1000);
+                    setTimeout(endUlt, 10500);
+                    break;
+                case 'acid':
+                    acidCloud = { alpha: 0.7 };
+                    acidCloudTimer = setInterval(() => { addCoins(500); showHurt(); }, 5000);
+                    setTimeout(() => { clearInterval(acidCloudTimer); acidCloud = { alpha: 0.3 }; setTimeout(() => { acidCloud = null; }, 3000); endUlt(); }, 15000);
+                    break;
+                case 'shuriken':
+                    $('btn-ult').textContent = 'Тапай!';
+                    setTimeout(endUlt, 15000);
+                    break;
+                case 'laser_sword':
+                    for (let i = 0; i < 5; i++) setTimeout(() => { addCoins(200); showHurt(); }, i*1000);
+                    setTimeout(endUlt, 5500);
+                    break;
+            }
+        }
+
+        function endUlt() {
+            ultActive = false; $('btn-ult').style.opacity = '0.5'; $('btn-ult').textContent = 'Перезарядка...';
+            setTimeout(() => { ultReady = true; updateUltButton(); }, ultCooldown);
+            if (acidCloudTimer) { clearInterval(acidCloudTimer); acidCloudTimer = null; }
+            if (acidCloud) { acidCloud = { alpha: 0.1 }; setTimeout(() => { acidCloud = null; }, 3000); }
+        }
+
+        $('btn-ult').addEventListener('click', activateUlt);
+
+        // Столкновения
         Events.on(engine, 'collisionStart', function(event) {
             for (var i = 0; i < event.pairs.length; i++) {
                 var pair = event.pairs[i], headBody = null, otherBody = null;
@@ -251,7 +309,13 @@
             }
         });
 
+        // Тап по голове
         canvas.addEventListener('click', function(e) {
+            if (ultActive && equippedWeapon === 'shuriken') {
+                addCoins(260); showHurt();
+                Body.setVelocity(head, { x:(Math.random()-0.5)*8, y:-6 });
+                return;
+            }
             var dx = head.position.x - e.clientX, dy = head.position.y - e.clientY;
             if (Math.sqrt(dx*dx+dy*dy) < RADIUS+40) {
                 Body.setVelocity(head, { x:head.velocity.x+(Math.random()-0.5)*2, y:-8 });
@@ -259,15 +323,27 @@
             }
         });
 
-        setInterval(function() {
+        // Ограничения
+        setInterval(() => {
             var spd = Math.sqrt(head.velocity.x*head.velocity.x + head.velocity.y*head.velocity.y);
             if (spd > 25) Body.setVelocity(head, { x:(head.velocity.x/spd)*25, y:(head.velocity.y/spd)*25 });
             if (head.position.x < RADIUS) Body.setPosition(head, { x:RADIUS, y:head.position.y });
             if (head.position.x > W-RADIUS) Body.setPosition(head, { x:W-RADIUS, y:head.position.y });
             if (head.position.y < RADIUS) Body.setPosition(head, { x:head.position.x, y:RADIUS });
             if (head.position.y > H-RADIUS) Body.setPosition(head, { x:head.position.x, y:H-RADIUS });
+
+            // Оружие тоже не должно улетать
+            Composite.allBodies(world).forEach(b => {
+                if (b.label === 'weapon') {
+                    if (b.position.x < -50 || b.position.x > W+50 || b.position.y > H+50) {
+                        World.remove(world, b);
+                        weaponSpawned[b.weaponKey] = false;
+                    }
+                }
+            });
         }, 16);
 
+        // Магазин
         function canBuy(wKey) {
             var w = weaponData[wKey];
             if (purchases[wKey] || coins < w.cost) return false;
@@ -282,8 +358,8 @@
             var w = weaponData[wKey]; coins -= w.cost; purchases[wKey] = true;
             if (w.isUnlock) unlockedLost = true;
             else if (w.branch) blockedBranch = w.branch;
-            $('coins-display').textContent = coins;
-            renderInventory(); renderShop();
+            $('coins-display').textContent = '💰 ' + coins;
+            saveGame(); renderInventory(); renderShop();
         }
 
         function renderShop() {
@@ -296,10 +372,10 @@
                 if (w.isUnlock && (!blockedBranch || unlockedLost)) locked = true;
                 if (purchases[key]) locked = true;
                 if (locked && !purchases[key]) item.classList.add('locked');
-                if (w.img && weaponImgs[w.img]) { var icon = document.createElement('img'); icon.src = weaponImgs[w.img].src; item.appendChild(icon); }
+                if (weaponImgs[key]) { var icon = document.createElement('img'); icon.src = weaponImgs[key].src; item.appendChild(icon); }
                 else if (w.isUnlock) { var d = document.createElement('div'); d.textContent = '🔓'; d.style.fontSize = '30px'; item.appendChild(d); }
                 var info = document.createElement('div'); info.className = 'info';
-                info.innerHTML = '<div class="name">'+w.name+'</div><div class="stats">'+w.cost+' монет | +'+w.reward+' за удар</div>';
+                info.innerHTML = '<div class="name">'+w.name+'</div><div class="stats">'+w.cost+' монет | +'+w.reward+' за удар'+(w.ultName?' | Ульта: '+w.ultName:'')+'</div>';
                 item.appendChild(info);
                 var btn = document.createElement('div'); btn.className = 'btn';
                 if (purchases[key]) { btn.textContent = 'Куплено'; btn.classList.add('disabled'); }
@@ -310,8 +386,8 @@
             });
         }
 
-        $('btn-shop').addEventListener('click', function() { $('shop-overlay').classList.add('open'); renderShop(); });
-        $('close-shop').addEventListener('click', function() { $('shop-overlay').classList.remove('open'); });
+        $('btn-shop').addEventListener('click', () => { $('shop-overlay').classList.add('open'); renderShop(); });
+        $('close-shop').addEventListener('click', () => { $('shop-overlay').classList.remove('open'); });
 
         function drawWeapons() {
             Composite.allBodies(world).forEach(function(body) {
@@ -332,18 +408,31 @@
         (function loop() {
             requestAnimationFrame(loop);
             Engine.update(engine, 1000/60);
-            ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, W, H);
+            ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
             if (bgImg.complete && bgImg.naturalWidth > 0) ctx.drawImage(bgImg, 0, 0, W, H);
+
+            // Кислотное облако
+            if (acidCloud) {
+                ctx.fillStyle = 'rgba(100,255,100,'+acidCloud.alpha+')';
+                ctx.fillRect(0, 0, W, H);
+            }
+
             var pos = head.position, angle = head.angle;
             ctx.save(); ctx.translate(pos.x, pos.y); ctx.rotate(angle);
             var face = (isHurt && faceHurt.complete && faceHurt.naturalWidth > 0) ? faceHurt : faceNormal;
             if (face.complete && face.naturalWidth > 0) ctx.drawImage(face, -RADIUS, -RADIUS, RADIUS*2, RADIUS*2);
             ctx.restore();
             drawWeapons();
+
+            // Инфо ульты
+            if (equippedWeapon && ultReady) $('ult-info').textContent = weaponData[equippedWeapon].ultName + ' готов';
+            else if (!ultReady) $('ult-info').textContent = 'Перезарядка...';
+            else $('ult-info').textContent = '';
         })();
 
-        $('coins-display').textContent = '0';
+        $('coins-display').textContent = '💰 ' + coins;
         renderInventory();
+        updateUltButton();
     </script>
 </body>
 </html>
