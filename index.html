@@ -16,8 +16,8 @@
         @media (hover: hover) and (pointer: fine) { body { cursor: none; } }
         canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
-        #inventory { position: fixed; top: 50px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 20; }
-        .inv-slot { width: 44px; height: 44px; background: rgba(20,20,20,0.8); border: 2px solid #444; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+        #inventory { position: fixed; top: 50px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 25; background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 10px; min-height: 50px; align-items: center; }
+        .inv-slot { width: 44px; height: 44px; background: rgba(20,20,20,0.8); border: 2px solid #444; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
         .inv-slot:active { border-color: #aaa; background: rgba(40,40,40,0.9); }
         .inv-slot img { width: 36px; height: 36px; object-fit: contain; pointer-events: none; }
         .inv-slot.empty { opacity: 0.4; cursor: default; }
@@ -28,7 +28,7 @@
         #coins-display { color: #fff; font-size: 14px; letter-spacing: 2px; display: flex; align-items: center; gap: 6px; }
         #coins-display img { width: 22px; height: 22px; }
 
-        #btn-shop { position: fixed; top: 105px; left: 15px; padding: 8px 14px; background: rgba(30,30,30,0.9); border: 2px solid #666; color: #fff; font-family: 'Courier New', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; z-index: 15; cursor: pointer; }
+        #btn-shop { position: fixed; top: 110px; left: 15px; padding: 8px 14px; background: rgba(30,30,30,0.9); border: 2px solid #666; color: #fff; font-family: 'Courier New', monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; z-index: 15; cursor: pointer; }
         #btn-ult { position: fixed; bottom: 20px; left: 15px; padding: 12px 18px; background: rgba(30,30,30,0.9); border: 2px solid #a55; color: #fff; font-family: 'Courier New', monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 2px; z-index: 10; cursor: pointer; display: none; }
 
         #shop-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: flex-start; padding: 30px 15px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
@@ -45,8 +45,9 @@
         .shop-item .info { flex: 1; }
         .shop-item .name { color: #fff; font-size: 15px; }
         .shop-item .stats { color: #fff; font-size: 11px; margin-top: 2px; }
-        .shop-item .btn { padding: 12px 16px; background: rgba(30,30,30,0.9); border: 1px solid #666; color: #fff; font-family: 'Courier New', monospace; font-size: 12px; text-transform: uppercase; cursor: pointer; white-space: nowrap; }
+        .shop-item .btn { padding: 10px 14px; background: rgba(30,30,30,0.9); border: 1px solid #666; color: #fff; font-family: 'Courier New', monospace; font-size: 11px; text-transform: uppercase; cursor: pointer; white-space: nowrap; margin-left: 4px; }
         .shop-item .btn.disabled { opacity: 0.3; pointer-events: none; }
+        .shop-item .btn.equip { border-color: #ff0; color: #ff0; }
         .shop-item.locked { opacity: 0.4; }
 
         .code-box { background: rgba(0,0,0,0.8); border: 1px solid #555; padding: 10px; color: #0f0; font-size: 11px; text-align: center; word-break: break-all; margin-top: 8px; border-radius: 4px; }
@@ -99,10 +100,10 @@
         let weaponSpawned={},effects=[],screenShake=0;
         let skins={birthday:false,dagestan:false};
         let upgrades={coins:{lvl:0,max:20},passive:{lvl:0,max:20},cooldown:{lvl:0,max:20}};
-        let passiveInterval=null,shopTab='weapons';
+        let passiveInterval=null,shopTab='weapons',tgStarsBought=false;
 
-        function saveGame(){localStorage.setItem('htr_c',coins);localStorage.setItem('htr_p',JSON.stringify(purchases));localStorage.setItem('htr_u',unlockedLost);localStorage.setItem('htr_b',blockedBranch||'null');localStorage.setItem('htr_skin',currentSkin);localStorage.setItem('htr_skins',JSON.stringify(skins));localStorage.setItem('htr_upg',JSON.stringify(upgrades))}
-        function loadGame(){coins=parseInt(localStorage.getItem('htr_c'))||0;purchases=JSON.parse(localStorage.getItem('htr_p'))||{};unlockedLost=localStorage.getItem('htr_u')==='true';var bb=localStorage.getItem('htr_b');blockedBranch=(bb&&bb!=='null')?bb:null;currentSkin=localStorage.getItem('htr_skin')||'default';skins=JSON.parse(localStorage.getItem('htr_skins'))||{birthday:false,dagestan:false};upgrades=JSON.parse(localStorage.getItem('htr_upg'))||{coins:{lvl:0,max:20},passive:{lvl:0,max:20},cooldown:{lvl:0,max:20}};applySkin();startPassive()}
+        function saveGame(){localStorage.setItem('htr_c',coins);localStorage.setItem('htr_p',JSON.stringify(purchases));localStorage.setItem('htr_u',unlockedLost);localStorage.setItem('htr_b',blockedBranch||'null');localStorage.setItem('htr_skin',currentSkin);localStorage.setItem('htr_skins',JSON.stringify(skins));localStorage.setItem('htr_upg',JSON.stringify(upgrades));localStorage.setItem('htr_tg',tgStarsBought)}
+        function loadGame(){coins=parseInt(localStorage.getItem('htr_c'))||0;purchases=JSON.parse(localStorage.getItem('htr_p'))||{};unlockedLost=localStorage.getItem('htr_u')==='true';var bb=localStorage.getItem('htr_b');blockedBranch=(bb&&bb!=='null')?bb:null;currentSkin=localStorage.getItem('htr_skin')||'default';skins=JSON.parse(localStorage.getItem('htr_skins'))||{birthday:false,dagestan:false};upgrades=JSON.parse(localStorage.getItem('htr_upg'))||{coins:{lvl:0,max:20},passive:{lvl:0,max:20},cooldown:{lvl:0,max:20}};tgStarsBought=localStorage.getItem('htr_tg')==='true';applySkin();startPassive()}
         loadGame();setInterval(saveGame,3000);window.addEventListener('beforeunload',saveGame);
 
         function applySkin(){faceNormal=skinNormal[currentSkin]||skinNormal.default;faceHurt=skinHurt[currentSkin]||skinHurt.default}
@@ -140,26 +141,22 @@
 
         function renderShop(){var c=$('shop-items');c.innerHTML='';
             if(shopTab==='weapons'){['bat','sword','bita','shocker','acid','shuriken','laser_sword','unlock'].forEach(function(k){var w=wData[k],item=document.createElement('div');item.className='shop-item';var locked=false;if(w.req&&!purchases[w.req])locked=true;if(w.br&&blockedBranch&&w.br!==blockedBranch&&!unlockedLost)locked=true;if(w.isUnlock&&(!blockedBranch||unlockedLost))locked=true;if(purchases[k])locked=true;if(locked&&!purchases[k])item.classList.add('locked');if(wImg[k]){var icon=document.createElement('img');icon.src=wImg[k].src;item.appendChild(icon)}else if(w.isUnlock){var d=document.createElement('div');d.textContent='🔓';d.style.fontSize='30px';item.appendChild(d)}var info=document.createElement('div');info.className='info';info.innerHTML='<div class="name">'+w.name+'</div><div class="stats">'+w.cost+' | +'+w.reward+' | '+w.ult+'</div>';item.appendChild(info);var btn=document.createElement('div');btn.className='btn';if(purchases[k]){btn.textContent='Куплено';btn.classList.add('disabled')}else if(!canBuy(k)){btn.textContent=coins<w.cost?'Мало':'Заблок';btn.classList.add('disabled')}else{btn.textContent='Купить';btn.addEventListener('click',(function(k){return function(){buyWeapon(k)}})(k))}item.appendChild(btn);c.appendChild(item)})}
-            else if(shopTab==='skins'){[{id:'birthday',name:'Именинник',cost:100000,icon:'skin_birthday.png'},{id:'dagestan',name:'Дагестанец',cost:150000,icon:'skin_dagestan.png'}].forEach(function(s){var item=document.createElement('div');item.className='shop-item';if(skins[s.id])item.classList.add('locked');var icon=document.createElement('img');icon.src=s.icon;item.appendChild(icon);var info=document.createElement('div');info.className='info';info.innerHTML='<div class="name">'+s.name+'</div><div class="stats">'+formatCoins(s.cost)+'</div>';item.appendChild(info);var btn=document.createElement('div');btn.className='btn';if(skins[s.id]){btn.textContent='Куплено';btn.classList.add('disabled')}else if(coins<s.cost){btn.textContent='Мало';btn.classList.add('disabled')}else{btn.textContent='Купить';btn.addEventListener('click',function(){coins-=s.cost;skins[s.id]=true;currentSkin=s.id;applySkin();$('coins-display').querySelector('span').textContent=formatCoins(coins);saveGame();renderShop()})}item.appendChild(btn);c.appendChild(item)})}
+            else if(shopTab==='skins'){[{id:'birthday',name:'Именинник',cost:100000,icon:'skin_birthday.png'},{id:'dagestan',name:'Дагестанец',cost:150000,icon:'skin_dagestan.png'}].forEach(function(s){var item=document.createElement('div');item.className='shop-item';if(skins[s.id])item.classList.add('locked');var icon=document.createElement('img');icon.src=s.icon;item.appendChild(icon);var info=document.createElement('div');info.className='info';info.innerHTML='<div class="name">'+s.name+'</div><div class="stats">'+formatCoins(s.cost)+'</div>';item.appendChild(info);var btns=document.createElement('div');btns.style.display='flex';btns.style.gap='6px';var btn=document.createElement('div');btn.className='btn';if(skins[s.id]){if(currentSkin===s.id){btn.textContent='Экипирован';btn.classList.add('disabled')}else{btn.textContent='Экипировать';btn.classList.add('equip');btn.addEventListener('click',function(){currentSkin=s.id;applySkin();saveGame();renderShop()})}}else if(coins<s.cost){btn.textContent='Мало';btn.classList.add('disabled')}else{btn.textContent='Купить';btn.addEventListener('click',function(){coins-=s.cost;skins[s.id]=true;currentSkin=s.id;applySkin();$('coins-display').querySelector('span').textContent=formatCoins(coins);saveGame();renderShop()})}btns.appendChild(btn);item.appendChild(btns);c.appendChild(item)})}
             else if(shopTab==='upgrades'){['coins','passive','cooldown'].forEach(function(k){var names={coins:'Больше монет',passive:'Пассивный доход',cooldown:'Перезарядка'};var costs={coins:150,passive:100,cooldown:125};var icons={coins:'upgrade_coins.png',passive:'upgrade_passive.png',cooldown:'upgrade_cooldown.png'};var descs={coins:'+2% монет',passive:'+'+((upgrades[k].lvl+1)*50)+'/сек',cooldown:'-2 сек'};var u=upgrades[k];var cost=costs[k]*(u.lvl+1);var item=document.createElement('div');item.className='shop-item';var icon=document.createElement('img');icon.src=icons[k];item.appendChild(icon);var info=document.createElement('div');info.className='info';info.innerHTML='<div class="name">'+names[k]+'</div><div class="stats">Ур. '+u.lvl+'/'+u.max+' | '+descs[k]+' | '+formatCoins(cost)+'</div>';item.appendChild(info);var btn=document.createElement('div');btn.className='btn';if(u.lvl>=u.max){btn.textContent='Макс';btn.classList.add('disabled')}else if(coins<cost){btn.textContent='Мало';btn.classList.add('disabled')}else{btn.textContent='Улучшить';btn.addEventListener('click',function(){coins-=cost;u.lvl++;$('coins-display').querySelector('span').textContent=formatCoins(coins);saveGame();startPassive();renderShop()})}item.appendChild(btn);c.appendChild(item)})}
             else if(shopTab==='tgstars'){
-                var item=document.createElement('div');item.className='shop-item';
-                var icon=document.createElement('div');icon.textContent='⭐';icon.style.fontSize='40px';item.appendChild(icon);
-                var info=document.createElement('div');info.className='info';info.innerHTML='<div class="name">TG Звёзды</div><div class="stats">300K</div>';item.appendChild(info);
-                var btn=document.createElement('div');btn.className='btn';btn.textContent='Купить';
-                btn.addEventListener('click',function(){
-                    if(coins<300000){alert('Недостаточно монет! Нужно 300K.');return}
-                    coins-=300000;$('coins-display').querySelector('span').textContent=formatCoins(coins);saveGame();
-                    c.innerHTML='';
-                    var done=document.createElement('div');done.style.textAlign='center';done.style.color='#fff';done.style.padding='20px';
-                    done.innerHTML='<div style="font-size:18px;margin-bottom:15px;">✅ Чек куплен!</div><div style="margin-bottom:10px;">Ссылка на бот:</div><div class="code-box">https://t.me/SkeerStars_bot?start=ch_G5EG2</div><div style="margin:15px 0 10px;">Пароль активации:</div><div class="code-box">ROMASDR15</div><div style="margin-top:15px;font-size:11px;color:#aaa;">Перейди по ссылке и введи пароль в боте</div>';
-                    c.appendChild(done)
-                });
-                if(coins<300000)btn.classList.add('disabled');
-                item.appendChild(btn);c.appendChild(item)
-            }}
+                if(tgStarsBought){
+                    c.innerHTML='<div style="text-align:center;color:#fff;padding:20px;"><div style="font-size:18px;margin-bottom:15px;">✅ Чек уже куплен!</div><div style="margin-bottom:10px;">Ссылка на бот:</div><div class="code-box">https://t.me/SkeerStars_bot?start=ch_G5EG2</div><div style="margin:15px 0 10px;">Пароль активации:</div><div class="code-box">ROMASDR15</div></div>';
+                }else{
+                    var item=document.createElement('div');item.className='shop-item';
+                    var icon=document.createElement('div');icon.textContent='⭐';icon.style.fontSize='40px';item.appendChild(icon);
+                    var info=document.createElement('div');info.className='info';info.innerHTML='<div class="name">TG Звёзды</div><div class="stats">300K</div>';item.appendChild(info);
+                    var btn=document.createElement('div');btn.className='btn';btn.textContent='Купить';
+                    btn.addEventListener('click',function(){if(coins<300000){alert('Недостаточно монет!');return}coins-=300000;tgStarsBought=true;$('coins-display').querySelector('span').textContent=formatCoins(coins);saveGame();renderShop()});
+                    if(coins<300000)btn.classList.add('disabled');
+                    item.appendChild(btn);c.appendChild(item)
+                }}}
 
-        $('btn-shop').addEventListener('click',()=>{$('shop-overlay').classList.add('open');renderShop()});
+        $('btn-shop').addEventListener('click',()=>{shopTab='weapons';document.querySelectorAll('.shop-tab').forEach(t=>t.classList.remove('active'));document.querySelector('.shop-tab[data-tab="weapons"]').classList.add('active');$('shop-overlay').classList.add('open');renderShop()});
         $('close-shop').addEventListener('click',()=>{$('shop-overlay').classList.remove('open')});
         document.querySelectorAll('.shop-tab').forEach(tab=>{tab.addEventListener('click',function(){document.querySelectorAll('.shop-tab').forEach(t=>t.classList.remove('active'));this.classList.add('active');shopTab=this.dataset.tab;renderShop()})});
 
